@@ -4,13 +4,17 @@ import os
 import os.path
 from pathlib import Path
 import numpy as np
-from tqdm import tqdm 
+import time
+import multiprocessing
 
 
 
 
 
-def generate_data(filename,output_path_pf):
+def worker(command):
+    
+    filename = command[0]
+    output_path_pf = command[1]
     f = "datasets\\" + filename + '.xls'
     output_pf = output_path_pf +'/'+ 'pf_' + filename + '.xls'
     df = pd.read_excel(f,header=[0,1])
@@ -43,8 +47,9 @@ def generate_data(filename,output_path_pf):
 
 
 def run_pf_us():
-    pbar = tqdm(total=100)
-    i = 0
+    pool=multiprocessing.Pool()
+    proc_list = []
+    i = 1
     cur_dir = os.getcwd()
     datafolder=cur_dir + '\datasets'
     output_path_root_folder = cur_dir + "/PF_US_output"
@@ -52,6 +57,7 @@ def run_pf_us():
         os.mkdir(output_path_root_folder)
     except OSError:
         pass
+    print("****** File list ******")
     for entry in os.scandir(datafolder):
         if entry.path.endswith(".xlsx") or entry.path.endswith(".xls"):
             filename  = Path(entry.path).stem
@@ -63,11 +69,19 @@ def run_pf_us():
             except OSError:
                 pass
             print("******Now processing: %s" % entry.name)
-            generate_data(filename, output_path_subfolder_pf)
-            pbar.update(100/len([name for name in os.scandir(datafolder) if name.path.endswith(".xlsx")]))
-            print()
-            print("output of %s is completed" % entry.name)
+            print("%d : %s" % (i,entry.name))
+            command =[filename,output_path_subfolder_pf]
+            proc_list.append(command)
             i += 1
-    print("Total %d files converted." % i)
-
+        print("****** Total %d files will be processed in parallel. ******" % i)
+    multiple_results = pool.map_async(worker,proc_list)
+    pool.close()
+    animation = "|/-\\"
+    idx = 0
+    while not multiple_results.ready():
+        print("Processing: ", end = '')
+        print(animation[idx % len(animation)], end="\r")
+        idx += 1
+        time.sleep(0.1)
+    pool.join()
 

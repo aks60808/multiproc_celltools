@@ -1,13 +1,9 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import os.path
 from pathlib import Path
 import inquirer
-from tqdm import tqdm,trange
-import subprocess
-from subprocess import Popen, PIPE
 import time
 import multiprocessing
 import warnings
@@ -381,7 +377,6 @@ def run_pf_cd_hf_bdcir():
             except OSError:
                 pass
             print("%d : %s" % (i,entry.name))
-            helper_path = cur_dir+'\_functions\pf_cd_hf_bdcir_helper.py'
             command =[filename,output_path_subfolder_pf,output_path_subfolder_cd,output_path_subfolder_hfir,
             output_path_subfolder_bdcir,cycle_num,proc_mode]
             proc_list.append(command)

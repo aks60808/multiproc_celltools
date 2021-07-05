@@ -1,12 +1,16 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 import os.path
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm 
+import multiprocessing
+import time
+def worker(command):
 
-def generate_bdcir_n_ratemap(filename,output_path_cd,cycles):
+    filename = command[0]
+    output_path = command[1]
+    cycles = command[2]
     f = "datasets\\" + filename + '.xlsx'
 
     
@@ -24,7 +28,7 @@ def generate_bdcir_n_ratemap(filename,output_path_cd,cycles):
     df_bdcir['V'] = R
     df_bdcir = df_bdcir.rename(columns={"V": "BDCIR"})
     del df_bdcir['index']
-    output_bdcir = output_path_cd +'/'+ 'bdcir_' + filename + '.csv'
+    output_bdcir = output_path +'/'+ 'bdcir_' + filename + '.csv'
     df_bdcir.to_csv(output_bdcir,index=False)
 
     concat_cd_df=None
@@ -69,15 +73,17 @@ def generate_bdcir_n_ratemap(filename,output_path_cd,cycles):
             concat_cd_df = cd_df
         else:
             concat_cd_df = pd.concat([concat_cd_df, cd_df], axis = 1)
-    output_cd = output_path_cd +'/'+ 'ratemap_' + filename + '.csv'
+    output_cd = output_path +'/'+ 'ratemap_' + filename + '.csv'
 
     concat_cd_df.to_csv(output_cd)
 
 
 def run_bdcir_ratemap():
+    pool=multiprocessing.Pool()
+    proc_list = []
     cycle_num = list(int(num) for num in input("Enter cycles separated by space ").strip().split())[:]
     pbar = tqdm(total=100)
-    i = 0
+    i = 1
     cur_dir = os.getcwd()
     datafolder=cur_dir + '\datasets'
     output_path_root_folder = cur_dir + "/BDCIR_RATEMAP_output"
@@ -85,6 +91,7 @@ def run_bdcir_ratemap():
         os.mkdir(output_path_root_folder)
     except OSError:
         pass
+    print("****** File list ******")
     for entry in os.scandir(datafolder):
         if entry.path.endswith(".xlsx") and entry.is_file():
             filename  = Path(entry.path).stem
@@ -93,12 +100,20 @@ def run_bdcir_ratemap():
                 os.mkdir(output_path_folder)
             except OSError:
                 pass
-            print("******Now processing: %s" % entry.name)
-            generate_bdcir_n_ratemap(filename,output_path_folder,cycle_num)
-            pbar.update(100/len([name for name in os.scandir(datafolder) if name.path.endswith(".xlsx")]))
-            print()
-            print("output of %s is completed" % entry.name)
+            print("%d : %s" % (i,entry.name))
+            command =[filename,output_path_folder,cycle_num]
+            proc_list.append(command)
             i += 1
-    print("Total %d files converted." % i)
+    print("****** Total %d files will be processed in parallel. ******" % i)
+    multiple_results = pool.map_async(worker,proc_list)
+    pool.close()
+    animation = "|/-\\"
+    idx = 0
+    while not multiple_results.ready():
+        print("Processing: ", end = '')
+        print(animation[idx % len(animation)], end="\r")
+        idx += 1
+        time.sleep(0.1)
+    pool.join()
 
 
