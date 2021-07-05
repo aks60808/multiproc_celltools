@@ -134,7 +134,7 @@ def worker(command):
         pf_df['Advance Cycle'] = pf_df['Advance Cycle'].subtract(1)
         pf_df = pf_df[['mAH','Temperature(°C)', 'Retention(%)','Advance Cycle']]
     else:
-        pf_df = pf_df[['Step time','Run time(min)','T','Retention(%)','Advance Cycle']]
+        pf_df = pf_df[['Step time(s)','Run time(min)','Temperature(°C)','Retention(%)','Advance Cycle']]
     pf_df.to_excel(output_pf,index=False)
 
     # data collection for HF and IR
