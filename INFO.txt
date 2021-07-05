@@ -1,0 +1,19 @@
+第一次使用:
+
+打開 anaconda powershell prompt
+
+輸入
+conda install -c conda-forge inquirer tqdm
+
+關閉 anaconda powershell prompt
+
+使用順序
+1.打開 anaconda powershell prompt
+2.cd Desktop
+3.cd Celltools
+4.python main.py 
+
+
+version
+1.0 --fix CCP with CPD and multile indexing detection
+2021/07/05|1.1 --fix Wrong retention due to extra step involving and masking runtimeWarning
