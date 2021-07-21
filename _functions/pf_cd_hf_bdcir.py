@@ -108,7 +108,7 @@ def worker(command):
     else:
         mode = 'CC\D'
         bdcir_flag = False
-        df = df[~df['Step'].isin([2, 7, 10])]
+        df = df[~df['Step'].isin([2])]
     #   select data where Action is mode and End status is either EV or ET
     pf_df = df[(df['Action'] == mode)&(df['End Status']=='EV') | (df['End Status']=='ET')]
     # extract attributes - Step Time, temperature and advanced cycle
@@ -348,7 +348,7 @@ def run_pf_cd_hf_bdcir():
                 ),
     ]
     proc_mode = inquirer.prompt(proc_questions)['Mode']
-    i = 1
+    i = 0
     cur_dir = os.getcwd()
     datafolder=cur_dir + '\datasets'
     output_path_root_folder = cur_dir + "/PF_CD_HF_output"
