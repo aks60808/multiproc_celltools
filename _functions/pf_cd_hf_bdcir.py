@@ -108,7 +108,7 @@ def worker(command):
     else:
         mode = 'CC\D'
         bdcir_flag = False
-        df = df[~df['Step'].isin([2])]
+        df = df[~df['Loop1'].isna()]
     #   select data where Action is mode and End status is either EV or ET
     pf_df = df[(df['Action'] == mode)&(df['End Status']=='EV') | (df['End Status']=='ET')]
     # extract attributes - Step Time, temperature and advanced cycle
