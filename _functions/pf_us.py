@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import time
 import multiprocessing
+import inquirer
 
 
 
@@ -17,10 +18,9 @@ def worker(command):
     filename  = command[1]
     output_path_pf = command[2]
     excel_flag = int(command[3])
+    proc_mode = command[4]
     f = "datasets\\" + file
-    
     output_pf = output_path_pf +'/'+ 'pf_' + filename + '.xlsx'
-
     if excel_flag == 1:
         df = pd.read_excel(f,header=1)
     else:
@@ -30,21 +30,38 @@ def worker(command):
     df.columns = lst
     df = df[(df['ES'] == 133)| (df['ES'] == 158)]
     df = df[(df['Cyc#'] != 0)]
-    df = df[['Step (Sec)', 'Aux #1']]
-    df['Run time(min)'] = df['Step (Sec)'].divide(60)
+    if proc_mode == 'AUX':
+        df = df[['Step (Sec)', 'Aux #1']]
+        df['Run time(min)'] = df['Step (Sec)'].divide(60)
 
-    # fomat the values 
-    df['Run time(min)'] = df['Run time(min)'].astype(float)
-    df['Run time(min)'] = df['Run time(min)'].round(4)
-    # each row of Step Time was divided by the first value in the column
-    df['Retention(%)'] = df['Step (Sec)'].divide(df['Step (Sec)'].iloc[0])
-    # format the value
-    df['Retention(%)'] = df['Retention(%)'].astype(float)
-    df['Retention(%)'] = df['Retention(%)'].round(4)
-    # rearrange the order of columns
-    df_cols = ['Step (Sec)','Run time(min)','Aux #1','Retention(%)']
+        # fomat the values 
+        df['Run time(min)'] = df['Run time(min)'].astype(float)
+        df['Run time(min)'] = df['Run time(min)'].round(4)
+        # each row of Step Time was divided by the first value in the column
+        df['Retention(%)'] = df['Step (Sec)'].divide(df['Step (Sec)'].iloc[0])
+        # format the value
+        df['Retention(%)'] = df['Retention(%)'].astype(float)
+        df['Retention(%)'] = df['Retention(%)'].round(4)
+        # rearrange the order of columns
+        df_cols = ['Step (Sec)','Run time(min)','Aux #1','Retention(%)']
+        df = df[df_cols]
+        df = df.rename(columns={"Aux #1": "Temperature(°C)"})
+    else:
+        df = df[['StepTime', 'Temp 1']]
+        df['Run time(min)'] = df['StepTime'].divide(60)
+        
+        # fomat the values 
+        df['Run time(min)'] = df['Run time(min)'].astype(float)
+        df['Run time(min)'] = df['Run time(min)'].round(4)
+        # each row of Step Time was divided by the first value in the column
+        df['Retention(%)'] = df['StepTime'].divide(df['StepTime'].iloc[0])
+        # format the value
+        df['Retention(%)'] = df['Retention(%)'].astype(float)
+        df['Retention(%)'] = df['Retention(%)'].round(4)
+        # rearrange the order of columns
+        df_cols = ['StepTime','Run time(min)','Temp 1','Retention(%)']
     df = df[df_cols]
-    df = df.rename(columns={"Aux #1": "Temperature(°C)"})
+    df = df.rename(columns={"Temp 1": "Temperature(°C)"})
     df = df.reset_index()
     df = df.drop(columns=['index'])
     df.to_excel(output_pf,index=False)
@@ -57,6 +74,13 @@ def run_pf_us():
     pool=multiprocessing.Pool()
     proc_list = []
     i = 1
+    proc_questions = [
+    inquirer.List('Mode',
+                    message="Discharge List",
+                    choices=['AUX', 'TEMP'],
+                ),
+    ]
+    proc_mode = inquirer.prompt(proc_questions)['Mode']
     cur_dir = os.getcwd()
     datafolder=cur_dir + '\datasets'
     output_path_root_folder = cur_dir + "/PF_US_output"
@@ -80,7 +104,7 @@ def run_pf_us():
             xlsx_flag = 1
         else:
             xlsx_flag = 0
-        command =[entry.name,filename,output_path_subfolder_pf,xlsx_flag]
+        command =[entry.name,filename,output_path_subfolder_pf,xlsx_flag,proc_mode]
         proc_list.append(command)
         
         i += 1
