@@ -13,13 +13,20 @@ import multiprocessing
 
 def worker(command):
     
-    filename = command[0]
-    output_path_pf = command[1]
-    f = "datasets\\" + filename + '.xlsx'
+    file = command[0]
+    filename  = command[1]
+    output_path_pf = command[2]
+    excel_flag = int(command[3])
+    f = "datasets\\" + file
+    
     output_pf = output_path_pf +'/'+ 'pf_' + filename + '.xlsx'
-    df = pd.read_excel(f,header=[0,1])
+
+    if excel_flag == 1:
+        df = pd.read_excel(f,header=1)
+    else:
+        df = pd.read_csv(f,sep='\t',header=1)
     lst = [x for x in df.columns]
-    lst = [ y for _,y in lst]
+    lst = [ y for y in lst]
     df.columns = lst
     df = df[(df['ES'] == 133)| (df['ES'] == 158)]
     df = df[(df['Cyc#'] != 0)]
@@ -59,20 +66,24 @@ def run_pf_us():
         pass
     print("****** File list ******")
     for entry in os.scandir(datafolder):
+        
+        filename  = Path(entry.path).stem
+        output_path_folder = output_path_root_folder + '/'+ filename
+        output_path_subfolder_pf = output_path_folder + '/' + "Performance_US"
+        try:
+            os.mkdir(output_path_folder)
+            os.mkdir(output_path_subfolder_pf)
+        except OSError:
+            pass
+        print("%d : %s" % (i,entry.name))
         if entry.path.endswith(".xlsx") or entry.path.endswith(".xls"):
-            filename  = Path(entry.path).stem
-            output_path_folder = output_path_root_folder + '/'+ filename
-            output_path_subfolder_pf = output_path_folder + '/' + "Performance_US"
-            try:
-                os.mkdir(output_path_folder)
-                os.mkdir(output_path_subfolder_pf)
-            except OSError:
-                pass
-            print("%d : %s" % (i,entry.name))
-            command =[filename,output_path_subfolder_pf]
-            proc_list.append(command)
-           
-            i += 1
+            xlsx_flag = 1
+        else:
+            xlsx_flag = 0
+        command =[entry.name,filename,output_path_subfolder_pf,xlsx_flag]
+        proc_list.append(command)
+        
+        i += 1
     print("****** Total %d files will be processed in parallel. ******" % i)
     multiple_results = pool.map_async(worker,proc_list)
     pool.close()
