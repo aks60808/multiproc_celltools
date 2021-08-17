@@ -60,8 +60,9 @@ def worker(command):
         df['Retention(%)'] = df['Retention(%)'].round(4)
         # rearrange the order of columns
         df_cols = ['StepTime','Run time(min)','Temp 1','Retention(%)']
-    df = df[df_cols]
-    df = df.rename(columns={"Temp 1": "Temperature(°C)"})
+        df = df[df_cols]
+        df = df.rename(columns={"Temp 1": "Temperature(°C)"})
+
     df = df.reset_index()
     df = df.drop(columns=['index'])
     df.to_excel(output_pf,index=False)
