@@ -10,7 +10,7 @@ from _functions.pf_us import run_pf_us
 from _functions.dcir import run_dcir
 from _functions.bdcir_ratemap import run_bdcir_ratemap
 from _functions.helper import welcome
-
+from _functions.ratemap_7a_us import run_7a_us
         
         
     
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     mode_prompt = [
     inquirer.List('Mode',
                     message="Service List",
-                    choices=['PF+CD+HF+BDCIR(CPD only)', 'DCIR', 'PF(US)', 'BDCIR+RATEMAP'],
+                    choices=['PF+CD+HF+BDCIR(CPD only)', 'DCIR', 'PF(US)', 'BDCIR+RATEMAP','7a(US)'],
                 ),
     ]
     service_mode = inquirer.prompt(mode_prompt)['Mode']
@@ -34,6 +34,8 @@ if __name__ == '__main__':
         run_pf_us()
     elif service_mode == 'BDCIR+RATEMAP':
         run_bdcir_ratemap()
+    elif service_mode == '7a(US)':
+        run_7a_us()
     print(f"{service_mode} has been completed, exit...")
 
 
